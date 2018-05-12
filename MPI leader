@@ -29,8 +29,6 @@ int main(int argc, char *argv[]) {
 		for (int i = 1; i <= 7; i++)
 		{
 			MPI_Recv(&receivedNumber, 1, MPI_INT, i, 0, MPI_COMM_WORLD, &status);
-			if (receivedNumber > generatedNumber)
-			{
 				if (receivedNumber > generatedNumber)
 				{
 					if (i > masterID)
@@ -39,7 +37,6 @@ int main(int argc, char *argv[]) {
 						masterID = i;
 					}
 				}
-			}
 		}
 
 		cout << "Master is " << masterID << " with number " << generatedNumber << endl;
