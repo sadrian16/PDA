@@ -1,0 +1,65 @@
+#include<iostream>
+#include <mpi.h>
+#include <windows.h>
+
+using namespace std;
+
+int arr[16] = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 };
+int nrProcs = 8;
+int totalSum = 0;
+
+int main(int argc, char *argv[]) {
+
+	int ID;
+	int Data = 0;
+
+	MPI_Init(&argc, &argv);
+	MPI_Comm_rank(MPI_COMM_WORLD, &ID);
+
+	MPI_Status status;
+
+	if (ID == 0)
+	{
+		for (int i = 1; i <= 7; i++)
+		{
+			
+			int a = arr[i];
+			MPI_Send(&a, 1, MPI_INT, i, 1, MPI_COMM_WORLD);
+
+			int b = arr[i + nrProcs];
+			MPI_Send(&b, 1, MPI_INT, i, 2, MPI_COMM_WORLD);
+		}
+
+		MPI_Status mStat;
+
+		for (int i = 1; i <= 7; i++)
+		{
+			int receivedSum;
+			MPI_Recv(&receivedSum, 1, MPI_INT, i, 1, MPI_COMM_WORLD, &mStat);
+			totalSum += receivedSum;
+		}
+
+		cout << totalSum;
+	}
+	else
+	{
+		for (int i = 0; i <= 7; i++) {
+			if (i == ID)
+			{
+				int a, b;
+				MPI_Recv(&a, 1, MPI_INT, 0, 1, MPI_COMM_WORLD, &status);
+				MPI_Recv(&b, 1, MPI_INT, 0, 2, MPI_COMM_WORLD, &status);
+
+				int sum = a + b;
+
+				cout << "Slave is " << ID << " have numbers " << a << " " << b << endl;
+				MPI_Send(&sum, 1, MPI_INT, 0, 1, MPI_COMM_WORLD);
+			}
+		}
+	}
+
+	MPI_Finalize();
+
+
+	return 0;
+}
