@@ -1,0 +1,73 @@
+#include <iostream>
+#include <mutex>
+#include <condition_variable>
+#include <thread>
+#include <queue>
+#include <Windows.h>
+#include <stdio.h>
+#define MAX 10
+
+using namespace std;
+
+std::queue<int> myqu;
+std::mutex queueMutex;
+
+std::condition_variable condProd;
+std::condition_variable condCons;
+
+
+void prod() {
+	while (true)
+	{
+		Sleep(1200);
+		int a = rand() % 100;
+		std::unique_lock<std::mutex> lock(queueMutex);
+		while (myqu.size() == MAX)
+		{
+			condProd.wait(lock);
+		}
+
+		myqu.push(a);
+
+		cout << "Am produs " << a << endl;
+
+		lock.unlock();
+
+		condCons.notify_all();
+	}
+}
+
+void cons() {
+	int x = 0;
+	while (true) {
+		std::unique_lock<std::mutex> lock(queueMutex);
+		while (myqu.empty())
+		{
+			condCons.wait(lock);
+		}
+
+		x = myqu.front();
+		myqu.pop();
+		Sleep(2000);
+
+		cout << "Am consumat " << x << endl;
+
+		lock.unlock();
+		condProd.notify_all();
+	}
+}
+
+int main() {
+
+	srand(time(NULL));
+	std::queue<int> queue;
+
+	thread producer(prod);
+	thread consumer(cons);
+
+	producer.join();
+	consumer.join();
+
+	return 0;
+
+}
